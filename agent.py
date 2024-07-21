@@ -57,6 +57,8 @@ from telegram.ext import (
     ApplicationBuilder
 )
 
+from stt import transcribe_audio
+
 
 
 elevenLabsClient = ElevenLabs(api_key=os.getenv("ELEVENLABS_API_KEY"))
@@ -134,7 +136,7 @@ def get_youtube_transcript(video_id: str) -> str:
 
     transcript = YouTubeTranscriptApi.get_transcript(video_id)
 
-    print(transcript)
+    #print(transcript)
 
     return transcript
 
@@ -314,6 +316,27 @@ async def answer_question(update: Update, context: ContextTypes) -> None:
     response = agent.chat(f"Answer Bayram's question about the generated podcast: {question}. Use 30 words maximum")
     await context.bot.send_message(chat_id=update.effective_chat.id, text=str(response))
 
+async def answer_audio_question(update: Update, context: ContextTypes) -> None:
+    """Answer an audioquestion from the user."""
+
+    print(f"Audio question received: {update.message.voice}")
+    
+    # Get the file associated with the voice message
+    new_file = await update.message.effective_attachment.get_file()
+    await new_file.download_to_drive('voice_message.ogg')
+
+    file_path_wav = 'voice_message.wav'
+    AudioSegment.from_file('voice_message.ogg', format="ogg").export(file_path_wav, format="wav")
+
+
+    # Transcribe the voice message to text
+    question = transcribe_audio('voice_message.wav')
+    print(f"Voice question transcribed: {question}")
+
+
+    memoryStorage.add(question, user_id="Bayram", metadata={"category": "questions"})
+    response = agent.chat(f"Answer Bayram's question about the generated podcast: {question}. Use 30 words maximum")
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=str(response))
 
 async def generate_podcast(update: Update, context: ContextTypes) -> None:
 
@@ -372,7 +395,8 @@ async def generate_podcast(update: Update, context: ContextTypes) -> None:
 app = ApplicationBuilder().token(os.getenv("TELEGRAM_BOT_TOKEN")).build()
 
 app.add_handler(CommandHandler("generate_podcast", generate_podcast))
-app.add_handler(MessageHandler(filters= filters.TEXT & ~filters.COMMAND, callback=answer_question))
+app.add_handler(MessageHandler(filters=filters.VOICE & ~filters.COMMAND, callback=answer_audio_question))
+app.add_handler(MessageHandler(filters=filters.TEXT & ~filters.COMMAND, callback=answer_question))
 
 app.run_polling()
 

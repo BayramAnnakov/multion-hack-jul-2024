@@ -43,6 +43,6 @@ class FriendMemory(BaseModel):
 @app.post("/webhook")
 def webhook(memory: FriendMemory):
     print(memory) # process your memory here
-    m.add_memory(memory.transcript, user_id="Bayram", metadata={"category": "daily memories"})
+    m.add(memory.transcript, user_id="Bayram", metadata={"category": "daily memories"})
     return memory
 
