@@ -25,11 +25,11 @@ client = MultiOn(
 )
 
 
-client.browse(
-    cmd = "Add Intelligent Investor book to the Amazon cart",
-    url = "https://www.amazon.com/",
-    local=True
-)
+# client.browse(
+#     cmd = "Add Intelligent Investor book to the Amazon cart",
+#     url = "https://www.amazon.com/",
+#     local=True
+# )
 
 # retrieveResponse = client.retrieve(
 #     cmd="Get Bayram's Top Skills from LinkedIn",
