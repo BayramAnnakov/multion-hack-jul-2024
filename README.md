@@ -14,4 +14,4 @@ If you’re like me, you have a long list of articles, videos, and podcasts save
 - **LlamaIndex**: Agents framework.
 - **ElevenLabs**: Generate audio for scripts.
 
-<a href="https://github.com/BayramAnnakov/multion-hack-jul-2024/blob/main/20240721_MultiOnHack_PersonalPod.pdf"> Hack Presentation Deck </a>
+<a href="https://github.com/BayramAnnakov/multion-hack-jul-2024/blob/main/20240721_MultiOnHack_myPod.pdf"> Hack Presentation Deck </a>
