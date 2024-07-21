@@ -59,6 +59,10 @@ def populate_skills(linkedin_url: str, user_id: str):
 
     #remove duplicates
     skills = []
+
+    if retrieveResponse is None:
+        print("No skills found")
+        return
     for item in retrieveResponse.data:
         if item["skill"] not in skills:
             skills.append(item["skill"])
