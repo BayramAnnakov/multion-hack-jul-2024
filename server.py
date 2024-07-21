@@ -1,8 +1,16 @@
+import dotenv
+
+dotenv.load_dotenv()
+
 from typing import List
 from fastapi import FastAPI
 from pydantic import BaseModel
 
+from mem0 import Memory
+
 app = FastAPI()
+
+m = Memory()
 
 
 class Structured(BaseModel):
@@ -13,7 +21,7 @@ class Structured(BaseModel):
     actionItems: List[str]
 
 
-class Memory(BaseModel):
+class FriendMemory(BaseModel):
     id: int
     createdAt: str
     transcript: str
@@ -23,7 +31,8 @@ class Memory(BaseModel):
 
 
 @app.post("/webhook")
-def webhook(memory: Memory):
+def webhook(memory: FriendMemory):
     print(memory) # process your memory here
+    m.add_memory(memory.transcript, user_id="Bayram", metadata={"category": "daily memories"})
     return memory
 

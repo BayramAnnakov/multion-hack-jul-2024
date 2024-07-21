@@ -9,6 +9,8 @@ from llama_index.core.tools import FunctionTool
 
 from multion.client import MultiOn
 
+from mem0 import Memory
+
 import re
 
 import requests
@@ -62,7 +64,7 @@ client = MultiOn(
     api_key=os.getenv("MULTION_API_KEY")
 )
 
-
+memoryStorage = Memory()
 
 LLM_MODEL_TYPE = "gpt-4o"
 
@@ -79,6 +81,13 @@ def get_watch_later_videos(query: str) -> str:
     data = retrieve_response.data
 
     return str(data)
+
+def search_memories(query: str) -> str:
+    """ Search relevant memories to use in the video summary"""
+    memories = memoryStorage.search(query, user_id="Bayram")
+
+    return memories
+
 
 def generate_audio(text: str) -> str:
     """ Generate audio from text using ElevenLabs API and save it to a file """
@@ -234,14 +243,18 @@ def get_openai_agent():
     download_audio_segments_tool = FunctionTool.from_defaults(fn=download_audio_segments)
     combine_audio_segments_and_summary_tool = FunctionTool.from_defaults(fn=combine_audio_segments_and_summary)
     generate_song_tool = FunctionTool.from_defaults(fn=generate_song)
+    memory_search_tool = FunctionTool.from_defaults(fn=search_memories)
 
     llm = OpenAI(model=LLM_MODEL_TYPE, temperature=0.1, timeout=180)
 
-    agent = OpenAIAgent.from_tools([watch_later_videos_tool, video_highlights_tool, audio_generation_tool, download_audio_segments_tool, combine_audio_segments_and_summary_tool, generate_song_tool], llm=llm, verbose=True, system_prompt="""
+    agent = OpenAIAgent.from_tools([watch_later_videos_tool, video_highlights_tool, audio_generation_tool, download_audio_segments_tool, combine_audio_segments_and_summary_tool, generate_song_tool, memory_search_tool], llm=llm, verbose=True, system_prompt="""
                                You are Bayram's AI podcast assistant. Your goal is to generate podcast from a list of youtube videos.
                                """)
                                    
     return agent
+
+def add_memories():
+    memoryStorage.add_memory("I've heard from my colleague Tim about Lex Fridman's talk with Bill Ackman and his controversial political views and invesments ", user_id="Bayram", metadata={"category": "daily memories"})
 
 def get_groq_agent():
     watch_later_videos_tool = FunctionTool.from_defaults(fn=get_watch_later_videos)
@@ -296,9 +309,12 @@ async def generate_podcast(update: Update, context: ContextTypes) -> None:
 
         audio_segments = agent.chat(f"Download audio segments for the top highlights of the video")
 
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Fetching memories related to the video...🧠")
+        memories = agent.chat(f"Get the top 3 memories related to the video")
+
         await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Generating a summary of the top highlights of the video...📝")
 
-        summary_file = agent.chat(f"Generate a summary of the top highlights of the video in a format of personal podcast for Bayram. Use friendly and conversational tone.  E.g. 'Hi Bayram, I hope you are enjoying your walk. Let me tell you about this video from your Watch Later list. This video is about <description of video, what is it about, who is in this video> . <Then describe key highlights in a conversational tone and explain why they are important for Bayram as an entrepreneur and AI enthusisast. Keep it informal>. Now you can listen to these highlights or skip to the next video '. Generate audio and save to a file")
+        summary_file = agent.chat(f"Generate a summary of the top highlights of the video in a format of personal podcast for Bayram. Use friendly and conversational tone.  E.g. 'Hi Bayram, I hope you are enjoying your walk. Let me tell you about this video from your Watch Later list. This video is about <description of video, what is it about, who is in this video> . <Then describe key highlights in a conversational tone and explain why they are important for Bayram as an entrepreneur and AI enthusisast. Mention daily memories relevant to this video. Keep it informal>. Now you can listen to these highlights or skip to the next video '. Generate audio and save to a file")
 
         await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Combining the audio segments of the top highlights of the video and the audio summary of the highlights into a single audio file...🎙️")
         combined_audio = agent.chat(f"Combine the audio segments of the top highlights of the video and the audio summary of the highlights into a single audio file")
@@ -319,6 +335,8 @@ app = ApplicationBuilder().token(os.getenv("TELEGRAM_BOT_TOKEN")).build()
 app.add_handler(CommandHandler("generate_podcast", generate_podcast))
 
 app.run_polling()
+
+#add_memories()
 
 # agent = get_agent()
 
