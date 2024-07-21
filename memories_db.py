@@ -72,10 +72,10 @@ def populate_skills(linkedin_url: str, user_id: str):
 
 
 
-reset_memories("Bayram")
+# reset_memories("Bayram")
 
-populate_memories("Bayram")
-populate_skills("https://www.linkedin.com/in/bayramannakov/", "Bayram")
+# populate_memories("Bayram")
+# populate_skills("https://www.linkedin.com/in/bayramannakov/", "Bayram")
 
 
 memories = m.get_all()
