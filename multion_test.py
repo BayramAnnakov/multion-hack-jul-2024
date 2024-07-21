@@ -6,6 +6,20 @@ import os
 
 from multion.client import MultiOn
 
+from mem0 import Memory
+
+config = {
+            "vector_store": {
+                "provider": "qdrant",
+                "config": {
+                    "host": "localhost",
+                    "port": 6333,
+                }
+            },
+        }
+
+m = Memory.from_config(config)
+
 client = MultiOn(
     api_key=os.getenv("MULTION_API_KEY")
 )
@@ -20,3 +34,9 @@ retrieveResponse = client.retrieve(
 )
 
 print(retrieveResponse)
+
+for item in retrieveResponse.data:
+    m.add(item["skill"], user_id="Bayram", metadata={"category": "skills"})
+
+
+skills = m.search(query="Bayram's Top Skills", user_id="Bayram")
