@@ -6,7 +6,7 @@ MyPod is a cutting-edge project that transforms your saved YouTube playlists and
 If you’re like me, you have a long list of articles, videos, and podcasts saved for later. MyPod automates the process of turning this content into an interactive podcast, making it easier to stay updated and entertained.
 
 ## Tech Stack
-- **Multion**: Retrieve a person’s YouTube watch list and LinkedIn interests for personalization.
+- **Multion**: Retrieve a person’s YouTube watch list and LinkedIn interests for personalization, as well as add book to Amazon cart.
 - **Friend**: Fetch a person’s daily memories for podcast personalization.
 - **Mem0**: Store a person’s interests, memories, and questions to the podcast.
 - **AgentOps**: Agent tracing and debugging.
