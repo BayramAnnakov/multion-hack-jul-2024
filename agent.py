@@ -245,6 +245,16 @@ def generate_song(prompt: str) -> str:
 
     return audio_file_path
 
+def add_book_to_cart(book_title: str) -> str:
+    """ Add a book to the Amazon cart """
+    client.browse(
+        cmd = f"Add {book_title} book to the Amazon cart",
+        url = "https://www.amazon.com/",
+        local=True
+    )
+
+    return f"Added {book_title} to the Amazon cart"
+
 def combine_audio_segments_and_summary(segments: List[str], summary_file:str, video_id:str) -> str:
 
     combined_audio = AudioSegment.empty()
@@ -271,10 +281,11 @@ def get_openai_agent():
     combine_audio_segments_and_summary_tool = FunctionTool.from_defaults(fn=combine_audio_segments_and_summary)
     generate_song_tool = FunctionTool.from_defaults(fn=generate_song)
     memory_search_tool = FunctionTool.from_defaults(fn=search_memories)
+    add_book_to_cart_tool = FunctionTool.from_defaults(fn=add_book_to_cart)
 
     llm = OpenAI(model=LLM_MODEL_TYPE, temperature=0.1, timeout=180)
 
-    agent = OpenAIAgent.from_tools([watch_later_videos_tool, video_highlights_tool, audio_generation_tool, download_audio_segments_tool, combine_audio_segments_and_summary_tool, generate_song_tool, memory_search_tool], llm=llm, verbose=True, system_prompt="""
+    agent = OpenAIAgent.from_tools([watch_later_videos_tool, video_highlights_tool, audio_generation_tool, download_audio_segments_tool, combine_audio_segments_and_summary_tool, generate_song_tool, memory_search_tool, add_book_to_cart_tool], llm=llm, verbose=True, system_prompt="""
                                You are Bayram's AI podcast assistant. Your goal is to generate podcast from a list of youtube videos.
                                """)
                                    
@@ -338,6 +349,9 @@ async def answer_audio_question(update: Update, context: ContextTypes) -> None:
     response = agent.chat(f"Answer Bayram's question about the generated podcast: {question}. Use 30 words maximum")
     await context.bot.send_message(chat_id=update.effective_chat.id, text=str(response))
 
+    agent.chat(f"If the question was about the book and you were able to answer it, add the book to the Amazon cart")
+    await context.bot.send_message(chat_id=update.effective_chat.id, text="Since you are bookworm, I have added the book to the Amazon cart for you. Enjoy reading!📚")
+
 async def generate_podcast(update: Update, context: ContextTypes) -> None:
 
     print("chat id: "+ str(update.effective_chat.id))
@@ -370,7 +384,7 @@ async def generate_podcast(update: Update, context: ContextTypes) -> None:
 
         await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Generating a summary of the top highlights of the video...📝")
 
-        summary_file = agent.chat(f"Generate a summary of the top highlights of the video in a format of personal podcast for Bayram. Use relevant memores. Use friendly and conversational tone.  E.g. 'Hi Bayram, I hope you are enjoying your walk. Let me tell you about this video from your Watch Later list. This video is about <description of video, what is it about, who is in this video> . <Then describe key highlights in a conversational tone and explain why they are important for Bayram as an entrepreneur and AI enthusisast. Mention memories relevant to this video. Keep it informal>. Now you can listen to these highlights or skip to the next video '. Generate audio and save to a file")
+        summary_file = agent.chat(f"Generate a summary of the top highlights of the video in a format of personal podcast for Bayram. Use relevant memores. Use friendly and conversational tone.  E.g. 'Hi Bayram, I hope you are enjoying your time at the MultiOn Hackathon. I hope I wont screw up during your demo. So, let me tell you about this video from your Watch Later list. This video is about <description of video, what is it about, who is in this video> . <Then describe key highlights in a conversational tone and explain why they are important for Bayram as an entrepreneur and AI enthusisast. Mention memories relevant to this video. Keep it informal>. Now you can listen to these highlights or skip to the next video '. Generate audio and save to a file")
 
         await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Combining the audio segments of the top highlights of the video and the audio summary of the highlights into a single audio file...🎙️")
         combined_audio = agent.chat(f"Combine the audio segments of the top highlights of the video and the audio summary of the highlights into a single audio file")
