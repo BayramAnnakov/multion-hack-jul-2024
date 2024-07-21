@@ -10,7 +10,17 @@ from mem0 import Memory
 
 app = FastAPI()
 
-m = Memory()
+config = {
+            "vector_store": {
+                "provider": "qdrant",
+                "config": {
+                    "host": "localhost",
+                    "port": 6333,
+                }
+            },
+        }
+
+m = Memory.from_config(config)
 
 
 class Structured(BaseModel):
