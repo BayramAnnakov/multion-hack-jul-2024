@@ -13,3 +13,5 @@ If you’re like me, you have a long list of articles, videos, and podcasts save
 - **Groq**: Fast Llama3 inference.
 - **LlamaIndex**: Agents framework.
 - **ElevenLabs**: Generate audio for scripts.
+
+<a href="https://github.com/BayramAnnakov/multion-hack-jul-2024/blob/main/20240721_MultiOnHack_PersonalPod.pdf"> Hack Presentation Deck </a>
