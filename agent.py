@@ -92,6 +92,21 @@ def get_watch_later_videos(query: str) -> str:
 
     return str(data)
 
+def get_top_skills(linkedin_url: str) -> str:
+    retrieve_response = client.retrieve(
+        cmd="Get person's top Skills from LinkedIn",
+        url=linkedin_url,
+        fields=["skill"],
+        local=True
+    )
+
+    skills = retrieve_response.data
+
+    for skill in skills:
+        memoryStorage.add(skill["skill"], user_id="Bayram", metadata={"category": "skills"})
+
+    return str(skills)
+
 def search_memories(query: str) -> str:
     """ Search relevant memories to use in the video summary"""
     memories = memoryStorage.search(query, user_id="Bayram")
@@ -287,9 +302,20 @@ def get_groq_agent():
                                    
     return agent
 
+agent = get_openai_agent()
+#agent = get_groq_agent()
+
+
+async def answer_question(update: Update, context: ContextTypes) -> None:
+    """Answer a question from the user."""
+    question = update.message.text
+
+    memoryStorage.add(question, user_id="Bayram", metadata={"category": "questions"})
+    response = agent.chat(f"Answer Bayram's question about the generated podcast: {question}. Use 30 words maximum")
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=str(response))
+
+
 async def generate_podcast(update: Update, context: ContextTypes) -> None:
-    agent = get_openai_agent()
-    #agent = get_groq_agent()
 
     print("chat id: "+ str(update.effective_chat.id))
 
@@ -316,7 +342,7 @@ async def generate_podcast(update: Update, context: ContextTypes) -> None:
 
         audio_segments = agent.chat(f"Download audio segments for the top highlights of the video")
 
-        await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Fetching memories related to the video...🧠")
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Fetching memories & skills related to the video...🧠")
         memories = agent.chat(f"Get memories related to this video")
 
         await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Generating a summary of the top highlights of the video...📝")
@@ -337,6 +363,8 @@ async def generate_podcast(update: Update, context: ContextTypes) -> None:
 
     return ConversationHandler.END
 
+
+
 # memories = memoryStorage.get_all()
 # print(memories)
 
@@ -344,6 +372,7 @@ async def generate_podcast(update: Update, context: ContextTypes) -> None:
 app = ApplicationBuilder().token(os.getenv("TELEGRAM_BOT_TOKEN")).build()
 
 app.add_handler(CommandHandler("generate_podcast", generate_podcast))
+app.add_handler(MessageHandler(filters= filters.TEXT & ~filters.COMMAND, callback=answer_question))
 
 app.run_polling()
 
